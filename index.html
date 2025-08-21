@@ -961,11 +961,7 @@
         document.getElementById('drawId').value = '';
         document.getElementById('drawField1').value = '';
         document.getElementById('drawField2').value = '';
-        
-        // Онлайн-обучение модели при наличии новых данных
-        if (history.length >= 15 && lstmModel) {
-            onlineTrainModel();
-        }
+        hideKeyboard();
     };
 
     // --- Статистика чисел ---
