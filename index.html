@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon181.png">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RDS12">
+    <meta name="apple-mobile-web-app-title" content="RDS11">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Улучшенный Рапидо Старт с LSTM</title>
+    <!-- Загрузка TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <!-- Загрузка Chart.js для визуализации -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Обновленные стили с новыми элементами */
         :root {
             --bg-color: #f5f5f7;
             --text-color: #1c1c1e;
@@ -99,6 +102,11 @@
             font-size: 1.2rem;
             margin-bottom: 8px;
         }
+        h3 {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin: 10px 0 5px;
+        }
         .numbers {
             display: flex;
             flex-wrap: wrap;
@@ -155,15 +163,27 @@
             background: var(--keyboard-bg);
             color: var(--text-color);
         }
-        .input-field {
+        #fakeInput {
+            position: absolute;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
+        #inputDisplay {
             width: 100%;
-            padding: 8px;
+            min-height: 70px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background: var(--card-bg);
-            color: var(--text-color);
+            padding: 8px;
+            margin-bottom: 8px;
             font-size: 15px;
-            margin-bottom: 5px;
+            background: var(--card-bg);
+            word-wrap: break-word;
+            color: var(--text-color);
+        }
+        .input-active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
         }
         .stats-table {
             width: 100%;
@@ -239,12 +259,15 @@
         .keyboard-key:active {
             background: var(--history-border);
         }
-        .keyboard-key.red {
-            background: var(--secondary-color);
-            color: white;
+        .keyboard-key.wide {
+            flex: 2;
         }
         .keyboard-key.blue {
             background: var(--primary-color);
+            color: white;
+        }
+        .keyboard-key.red {
+            background: var(--secondary-color);
             color: white;
         }
         .theme-toggle {
@@ -289,6 +312,19 @@
         .method-btn.active {
             background: var(--primary-color);
             color: white;
+        }
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            margin-left: 5px;
+            cursor: help;
         }
         .win-stats {
             display: flex;
@@ -357,6 +393,55 @@
             display: block;
             margin-bottom: 5px;
             font-size: 0.9rem;
+        }
+        .draw-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        .input-field {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        .input-field:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
+            outline: none;
+        }
+        .keyboard-key.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .keyboard-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .prize-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .prize-table th, .prize-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .prize-table th {
+            background-color: rgba(0,102,204,0.1);
+        }
+        .jackpot {
+            background-color: rgba(255,215,0,0.2);
+            font-weight: bold;
         }
         .training-status {
             padding: 8px;
@@ -457,15 +542,14 @@
         .dark-mode .info-box {
             background: rgba(10, 132, 255, 0.1);
         }
-        .prediction-info {
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 188, 212, 0.1);
-            border-radius: 8px;
-            font-size: 14px;
+        .prediction-charts {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        .dark-mode .prediction-info {
-            background: rgba(0, 188, 212, 0.2);
+        .prediction-chart-container {
+            width: 100%;
+            height: 250px;
         }
     </style>
 </head>
@@ -475,7 +559,7 @@
     <div class="container">
         <div class="card">
             <h1>Улучшенный Рапидо Старт с LSTM</h1>
-            <p class="subtitle">Гибридный анализ с нейросетевым прогнозированием</p>
+            <p class="subtitle">Гибридный анализ с нейросетевым прогнозирование</p>
         </div>
         
         <div class="card">
@@ -511,15 +595,15 @@
             <div class="draw-inputs">
                 <div class="draw-input">
                     <label>Тираж</label>
-                    <input type="text" id="drawId" class="input-field" placeholder="Номер тиража">
+                    <input type="text" id="drawId" class="input-field" placeholder="Номер тиража" readonly>
                 </div>
                 <div class="draw-input">
                     <label>Поле 1 (8 чисел)</label>
-                    <input type="text" id="drawField1" class="input-field" placeholder="1,2,3,4,5,6,7,8">
+                    <input type="text" id="drawField1" class="input-field" placeholder="1,2,3,4,5,6,7,8" readonly>
                 </div>
                 <div class="draw-input">
                     <label>Поле 2 (1 число)</label>
-                    <input type="text" id="drawField2" class="input-field" placeholder="1">
+                    <input type="text" id="drawField2" class="input-field" placeholder="1" readonly>
                 </div>
             </div>
             <div id="validationError" class="validation-error"></div>
@@ -562,10 +646,14 @@
             </div>
             
             <div class="tab-content" id="predictionsTab">
-                <div id="predictionInfo" class="prediction-info">
-                    Прогноз строится на основе LSTM-модели, обученной на исторических данных. Для построения прогноза необходимо как минимум 10 тиражей в истории.
+                <div class="prediction-charts">
+                    <div class="prediction-chart-container">
+                        <canvas id="field1PredictionChart"></canvas>
+                    </div>
+                    <div class="prediction-chart-container">
+                        <canvas id="field2PredictionChart"></canvas>
+                    </div>
                 </div>
-                <canvas id="predictionChart" class="chart-container"></canvas>
                 <div class="info-box">
                     Прогноз вероятности выпадения чисел в следующем тираже на основе LSTM модели.
                 </div>
@@ -581,24 +669,26 @@
 
     <!-- Кастомная клавиатура -->
     <div class="custom-keyboard" id="customKeyboard">
-        <div class="keyboard-row">
-            <div class="keyboard-key" data-key="1">1</div>
-            <div class="keyboard-key" data-key="2">2</div>
-            <div class="keyboard-key" data-key="3">3</div>
-            <div class="keyboard-key" data-key="4">4</div>
-            <div class="keyboard-key" data-key="5">5</div>
-        </div>
-        <div class="keyboard-row">
-            <div class="keyboard-key" data-key="6">6</div>
-            <div class="keyboard-key" data-key="7">7</div>
-            <div class="keyboard-key" data-key="8">8</div>
-            <div class="keyboard-key" data-key="9">9</div>
-            <div class="keyboard-key" data-key="0">0</div>
-        </div>
-        <div class="keyboard-row">
-            <div class="keyboard-key" data-key=",">,</div>
-            <div class="keyboard-key red" data-key="backspace">⌫</div>
-            <div class="keyboard-key blue" data-key="done">Готово</div>
+        <div class="keyboard-container">
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-key="1">1</div>
+                <div class="keyboard-key" data-key="2">2</div>
+                <div class="keyboard-key" data-key="3">3</div>
+                <div class="keyboard-key" data-key="4">4</div>
+                <div class="keyboard-key" data-key="5">5</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-key="6">6</div>
+                <div class="keyboard-key" data-key="7">7</div>
+                <div class="keyboard-key" data-key="8">8</div>
+                <div class="keyboard-key" data-key="9">9</div>
+                <div class="keyboard-key" data-key="0">0</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-key=",">,</div>
+                <div class="keyboard-key red" data-key="backspace">⌫</div>
+                <div class="keyboard-key blue" data-key="done">Готово</div>
+            </div>
         </div>
     </div>
 
@@ -619,9 +709,7 @@
         applyTheme(!dark);
         updateCharts();
         renderHeatmap();
-        if (document.getElementById('predictionsTab').classList.contains('active')) {
-            renderPredictionsChart();
-        }
+        updatePredictionCharts();
     };
     applyTheme(localStorage.getItem('darkMode') === 'true');
 
@@ -732,21 +820,9 @@
     }
 
     // Обработчики для полей ввода
-    document.getElementById('drawId').addEventListener('focus', (e) => {
-        e.preventDefault();
-        e.target.blur();
-        showKeyboard(document.getElementById('drawId'));
-    });
-    document.getElementById('drawField1').addEventListener('focus', (e) => {
-        e.preventDefault();
-        e.target.blur();
-        showKeyboard(document.getElementById('drawField1'));
-    });
-    document.getElementById('drawField2').addEventListener('focus', (e) => {
-        e.preventDefault();
-        e.target.blur();
-        showKeyboard(document.getElementById('drawField2'));
-    });
+    document.getElementById('drawId').addEventListener('focus', () => showKeyboard(document.getElementById('drawId')));
+    document.getElementById('drawField1').addEventListener('focus', () => showKeyboard(document.getElementById('drawField1')));
+    document.getElementById('drawField2').addEventListener('focus', () => showKeyboard(document.getElementById('drawField2')));
 
     document.addEventListener('click', (e) => {
         if (!currentInput) return;
@@ -811,9 +887,7 @@
             updateWinStats();
             updateCharts();
             renderHeatmap();
-            if (document.getElementById('predictionsTab').classList.contains('active')) {
-                renderPredictionsChart();
-            }
+            updatePredictionCharts();
         }
     });
     
@@ -840,9 +914,7 @@
             generateNumbers();
             updateCharts();
             renderHeatmap();
-            if (document.getElementById('predictionsTab').classList.contains('active')) {
-                renderPredictionsChart();
-            }
+            updatePredictionCharts();
         }
     };
 
@@ -948,20 +1020,23 @@
         
         history.push(result);
         saveHistory();
+        
+        // ОЧИСТКА ПОЛЕЙ ВВОДА ПЕРЕМЕЩЕНА СЮДА, ЧТОБЫ ВЫПОЛНЯЛАСЬ ДАЖЕ ПРИ ОШИБКАХ В ФУНКЦИЯХ ОБНОВЛЕНИЯ
+        document.getElementById('drawId').value = '';
+        document.getElementById('drawField1').value = '';
+        document.getElementById('drawField2').value = '';
+        
         renderHistory();
         updateStats();
         updateWinStats();
         updateCharts();
         renderHeatmap();
-        if (document.getElementById('predictionsTab').classList.contains('active')) {
-            renderPredictionsChart();
-        }
+        updatePredictionCharts();
         
-        // Очищаем поля ввода
-        document.getElementById('drawId').value = '';
-        document.getElementById('drawField1').value = '';
-        document.getElementById('drawField2').value = '';
-        hideKeyboard();
+        // Онлайн-обучение модели при наличии новых данных
+        if (history.length >= 15 && lstmModel) {
+            onlineTrainModel();
+        }
     };
 
     // --- Статистика чисел ---
@@ -1369,7 +1444,7 @@
             // Сортируем по частоте выпадения (от наименьшей)
             groupNumbers.sort((a, b) => countField1[a - 1] - countField1[b - 1]);
 
-            // Выбираем 2 самых редких числа в групе
+            // Выбираем 2 самых редких числа в группе
             selected1.push(groupNumbers[0], groupNumbers[1]);
         });
 
@@ -1682,11 +1757,6 @@
             
             modelAccuracy.textContent = `${accuracy}%`;
             trainingMessage.textContent = 'Обучение завершено!';
-            
-            // Обновляем прогнозы, если активна соответствующая вкладка
-            if (document.getElementById('predictionsTab').classList.contains('active')) {
-                renderPredictionsChart();
-            }
         } catch (e) {
             console.error('Ошибка обучения:', e);
             trainingMessage.textContent = 'Ошибка обучения: ' + e.message;
@@ -1767,11 +1837,6 @@
             localStorage.setItem('lstmModelInfo', JSON.stringify(modelInfo));
             
             console.log('Модель обновлена онлайн');
-            
-            // Обновляем прогнозы, если активна соответствующая вкладка
-            if (document.getElementById('predictionsTab').classList.contains('active')) {
-                renderPredictionsChart();
-            }
         } catch (e) {
             console.error('Ошибка онлайн-обучения:', e);
         }
@@ -1909,7 +1974,7 @@
             }
         }
         
-        // Создаем ячейки тепловой карты
+        // Создаем ячейки тепловой карта
         for (let i = 0; i < 20; i++) {
             for (let j = 0; j < 20; j++) {
                 const cell = document.createElement('div');
@@ -1938,31 +2003,6 @@
     function updateCharts() {
         const efficiencyCtx = document.getElementById('efficiencyChart').getContext('2d');
         
-        // Уничтожаем старый график
-        if (window.efficiencyChart) {
-            window.efficiencyChart.destroy();
-        }
-        
-        // Проверяем наличие данных
-        let hasData = false;
-        for (const method in winStats) {
-            if (winStats[method].bets > 0) {
-                hasData = true;
-                break;
-            }
-        }
-        
-        if (!hasData) {
-            // Создаем сообщение вместо графика
-            efficiencyCtx.font = "16px Arial";
-            efficiencyCtx.fillStyle = "var(--secondary-color)";
-            efficiencyCtx.textAlign = "center";
-            efficiencyCtx.fillText("Недостаточно данных для анализа эффективности", 
-                                  efficiencyCtx.canvas.width / 2, 
-                                  efficiencyCtx.canvas.height / 2);
-            return;
-        }
-        
         // Собираем данные для графика
         const methods = ['cold', 'ogneva', 'karnaugh', 'uniform', 'lstm', 'hybrid'];
         const methodNames = methods.map(m => {
@@ -1985,6 +2025,11 @@
             const stats = winStats[m];
             return stats.bets > 0 ? Math.round((stats.wins / stats.bets) * 100) : 0;
         });
+        
+        // Уничтожаем старый график, если он существует
+        if (window.efficiencyChart) {
+            window.efficiencyChart.destroy();
+        }
         
         // Создаем новый график
         window.efficiencyChart = new Chart(efficiencyCtx, {
@@ -2033,39 +2078,12 @@
         });
     }
     
-    // Функция для построения графика прогнозов
-    async function renderPredictionsChart() {
-        const ctx = document.getElementById('predictionChart').getContext('2d');
-        
-        // Уничтожаем предыдущий график
-        if (window.predictionChart) {
-            window.predictionChart.destroy();
+    // Функция для получения предсказаний LSTM
+    async function getLSTMPredictions() {
+        if (!lstmModel || history.length < 10) {
+            return null;
         }
         
-        // Очищаем canvas
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        
-        // Проверяем условия для построения прогноза
-        if (history.length < 10) {
-            // Создаем сообщение о недостатке данных
-            ctx.font = "16px Arial";
-            ctx.fillStyle = "var(--secondary-color)";
-            ctx.textAlign = "center";
-            ctx.fillText("Недостаточно данных для прогноза", ctx.canvas.width / 2, ctx.canvas.height / 2 - 15);
-            ctx.fillText(`Нужно как минимум 10 тиражей (сейчас: ${history.length})`, ctx.canvas.width / 2, ctx.canvas.height / 2 + 15);
-            return;
-        }
-
-        if (!lstmModel) {
-            // Создаем сообщение об отсутствии модели
-            ctx.font = "16px Arial";
-            ctx.fillStyle = "var(--secondary-color)";
-            ctx.textAlign = "center";
-            ctx.fillText("LSTM-модель не обучена", ctx.canvas.width / 2, ctx.canvas.height / 2 - 15);
-            ctx.fillText("Нажмите 'Обучить модель' для обучения", ctx.canvas.width / 2, ctx.canvas.height / 2 + 15);
-            return;
-        }
-
         try {
             // Создаем последовательность из последних 10 тиражей
             const sequence = [];
@@ -2096,66 +2114,140 @@
             prediction.dispose();
             input.dispose();
             
-            // Нормализуем вероятности для поля 1
-            const field1Probs = Array.from(values.slice(0, 20));
-            const sum1 = field1Probs.reduce((a, b) => a + b, 0);
-            const normalizedProbs1 = sum1 > 0 ? 
-                field1Probs.map(p => p / sum1) : 
-                Array(20).fill(1/20);
+            // Разделяем предсказания для полей 1 и 2
+            const field1Predictions = values.slice(0, 20);
+            const field2Predictions = values.slice(20, 24);
             
-            // Создаем график для поля 1
-            window.predictionChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => i+1),
-                    datasets: [{
-                        label: 'Вероятность выпадения',
-                        data: normalizedProbs1,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 0.2, // Ограничиваем масштаб для лучшей визуализации
-                            title: {
-                                display: true,
-                                text: 'Вероятность'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
+            return {
+                field1: field1Predictions,
+                field2: field2Predictions
+            };
+        } catch (e) {
+            console.error('Ошибка получения предсказаний LSTM:', e);
+            return null;
+        }
+    }
+    
+    // Обновление графиков предсказаний
+    async function updatePredictionCharts() {
+        const field1Ctx = document.getElementById('field1PredictionChart').getContext('2d');
+        const field2Ctx = document.getElementById('field2PredictionChart').getContext('2d');
+        
+        // Получаем предсказания
+        const predictions = await getLSTMPredictions();
+        
+        if (!predictions) {
+            // Если нет предсказаний, показываем сообщение
+            field1Ctx.clearRect(0, 0, field1Ctx.canvas.width, field1Ctx.canvas.height);
+            field2Ctx.clearRect(0, 0, field2Ctx.canvas.width, field2Ctx.canvas.height);
+            
+            field1Ctx.font = '16px Arial';
+            field1Ctx.fillStyle = 'gray';
+            field1Ctx.textAlign = 'center';
+            field1Ctx.fillText('Недостаточно данных для предсказания', field1Ctx.canvas.width / 2, field1Ctx.canvas.height / 2);
+            
+            field2Ctx.font = '16px Arial';
+            field2Ctx.fillStyle = 'gray';
+            field2Ctx.textAlign = 'center';
+            field2Ctx.fillText('Недостаточно данных для предсказания', field2Ctx.canvas.width / 2, field2Ctx.canvas.height / 2);
+            return;
+        }
+        
+        // Уничтожаем старые графики, если они существуют
+        if (window.field1PredictionChart) {
+            window.field1PredictionChart.destroy();
+        }
+        if (window.field2PredictionChart) {
+            window.field2PredictionChart.destroy();
+        }
+        
+        // Создаем график для поля 1
+        window.field1PredictionChart = new Chart(field1Ctx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 20}, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Вероятность выпадения',
+                    data: predictions.field1,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
                         title: {
                             display: true,
-                            text: 'Прогноз вероятности выпадения чисел (поле 1)'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Вероятность: ${(context.raw * 100).toFixed(2)}%`;
-                                }
-                            }
+                            text: 'Вероятность'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Числа (поле 1)'
                         }
                     }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Прогноз LSTM для поля 1 (8 из 20)'
+                    }
                 }
-            });
-        } catch (e) {
-            console.error('Ошибка при построении прогноза:', e);
-            // Создаем сообщение об ошибке
-            ctx.font = "16px Arial";
-            ctx.fillStyle = "var(--secondary-color)";
-            ctx.textAlign = "center";
-            ctx.fillText("Ошибка при построении прогноза", ctx.canvas.width / 2, ctx.canvas.height / 2 - 15);
-            ctx.fillText(e.message, ctx.canvas.width / 2, ctx.canvas.height / 2 + 15);
-        }
+            }
+        });
+        
+        // Создаем график для поля 2
+        window.field2PredictionChart = new Chart(field2Ctx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 4}, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Вероятность выпадения',
+                    data: predictions.field2,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        title: {
+                            display: true,
+                            text: 'Вероятность'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Числа (поле 2)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Прогноз LSTM для поля 2 (1 из 4)'
+                    }
+                }
+            }
+        });
     }
     
     // --- Переключение вкладок ---
@@ -2171,11 +2263,9 @@
             tab.classList.add('active');
             document.getElementById(`${tabId}Tab`).classList.add('active');
             
-            // Обновляем графики при переключении вкладок
-            if (tabId === 'efficiency') {
-                setTimeout(updateCharts, 50); // Небольшая задержка для гарантированной отрисовки
-            } else if (tabId === 'predictions') {
-                setTimeout(renderPredictionsChart, 50); // Небольшая задержка для гарантированной отрисовки
+            // Если активирована вкладка прогнозов, обновляем графики
+            if (tabId === 'predictions') {
+                updatePredictionCharts();
             }
         });
     });
@@ -2200,11 +2290,6 @@
         // Инициализируем визуализации
         renderHeatmap();
         updateCharts();
-        
-        // Если активна вкладка прогнозов, строим график
-        if (document.querySelector('.tab.active').dataset.tab === 'predictions') {
-            setTimeout(renderPredictionsChart, 500);
-        }
     });
 </script>
 </body>
