@@ -631,15 +631,15 @@
             <div class="draw-inputs">
                 <div class="draw-input">
                     <label>Тираж</label>
-                    <input type="text" id="drawId" class="input-field" placeholder="Номер тиража">
+                    <input type="text" id="drawId" class="input-field" placeholder="Номер тиража" readonly>
                 </div>
                 <div class="draw-input">
                     <label>Поле 1 (8 чисел)</label>
-                    <input type="text" id="drawField1" class="input-field" placeholder="1,2,3,4,5,6,7,8">
+                    <input type="text" id="drawField1" class="input-field" placeholder="1,2,3,4,5,6,7,8" readonly>
                 </div>
                 <div class="draw-input">
                     <label>Поле 2 (1 число)</label>
-                    <input type="text" id="drawField2" class="input-field" placeholder="1">
+                    <input type="text" id="drawField2" class="input-field" placeholder="1" readonly>
                 </div>
             </div>
             <div id="validationError" class="validation-error"></div>
@@ -805,6 +805,19 @@
     const customKeyboard = document.getElementById('customKeyboard');
     let currentInput = null;
 
+    // Проверяем, является ли устройство iPad
+    function isIOS() {
+        return [
+            'iPad Simulator',
+            'iPhone Simulator',
+            'iPod Simulator',
+            'iPad',
+            'iPhone',
+            'iPod'
+        ].includes(navigator.platform) || 
+        (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+    }
+
     // Инициализация клавиатуры
     document.querySelectorAll('.keyboard-key').forEach(key => {
         key.addEventListener('click', () => {
@@ -851,20 +864,60 @@
         currentInput = input;
         customKeyboard.style.display = 'flex';
         input.classList.add('input-active');
+        
+        // Для iOS устройств предотвращаем появление системной клавиатуры
+        if (isIOS()) {
+            input.blur();
+            setTimeout(() => {
+                input.readOnly = true;
+            }, 100);
+        }
     }
 
     function hideKeyboard() {
         if (currentInput) {
             currentInput.classList.remove('input-active');
+            if (isIOS()) {
+                currentInput.readOnly = false;
+            }
             currentInput = null;
         }
         customKeyboard.style.display = 'none';
     }
 
     // Обработчики для полей ввода
-    document.getElementById('drawId').addEventListener('focus', () => showKeyboard(document.getElementById('drawId')));
-    document.getElementById('drawField1').addEventListener('focus', () => showKeyboard(document.getElementById('drawField1')));
-    document.getElementById('drawField2').addEventListener('focus', () => showKeyboard(document.getElementById('drawField2')));
+    document.getElementById('drawId').addEventListener('focus', (e) => {
+        e.preventDefault();
+        showKeyboard(document.getElementById('drawId'));
+    });
+    
+    document.getElementById('drawField1').addEventListener('focus', (e) => {
+        e.preventDefault();
+        showKeyboard(document.getElementById('drawField1'));
+    });
+    
+    document.getElementById('drawField2').addEventListener('focus', (e) => {
+        e.preventDefault();
+        showKeyboard(document.getElementById('drawField2'));
+    });
+
+    // Для touch-устройств добавляем обработчики касания
+    if (isIOS()) {
+        document.getElementById('drawId').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            showKeyboard(document.getElementById('drawId'));
+        });
+        
+        document.getElementById('drawField1').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            showKeyboard(document.getElementById('drawField1'));
+        });
+        
+        document.getElementById('drawField2').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            showKeyboard(document.getElementById('drawField2'));
+        });
+    }
 
     document.addEventListener('click', (e) => {
         if (!currentInput) return;
@@ -1302,11 +1355,11 @@
         
         // Увеличиваем счетчик ставки
         if(winStats[currentMethod]) {
-            winStats[currentMethod].bets++;
-            winStats[currentMethod].spent += 100;
-            winStats[currentMethod].balance = winStats[currentMethod].won - winStats[currentMethod].spent;
-            updateWinStats();
-        }
+                    winStats[currentMethod].bets++;
+                    winStats[currentMethod].spent += 100;
+                    winStats[currentMethod].balance = winStats[currentMethod].won - winStats[currentMethod].spent;
+                    updateWinStats();
+                }
         
         // Автоматически заполняем номер тиража
         document.getElementById('drawId').value = nextDrawId;
@@ -2349,7 +2402,7 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
-            // Добавляем активный класс текущей вкладке и контенту
+            // Добавляем активный класс текуной вкладке и контенту
             tab.classList.add('active');
             document.getElementById(`${tabId}Tab`).classList.add('active');
             
