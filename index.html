@@ -591,7 +591,7 @@
     <div class="container">
         <div class="card">
             <h1>Улучшенный Рапидо Старт с LSTM</h1>
-            <p class="subtitle">Гибридный анализ с нейросетевым прогнозированием</p>
+            <p class="subtitle">Гибридный анализ с нейросетевым прогнозирование</p>
         </div>
         
         <div class="card">
@@ -627,15 +627,15 @@
             <div class="draw-inputs">
                 <div class="draw-input">
                     <label>Тираж</label>
-                    <input type="text" id="drawId" class="input-field" placeholder="Номер тиража" readonly>
+                    <input type="text" id="drawId" class="input-field" placeholder="Номер тиража">
                 </div>
                 <div class="draw-input">
                     <label>Поле 1 (8 чисел)</label>
-                    <input type="text" id="drawField1" class="input-field" placeholder="1,2,3,4,5,6,7,8" readonly>
+                    <input type="text" id="drawField1" class="input-field" placeholder="1,2,3,4,5,6,7,8">
                 </div>
                 <div class="draw-input">
                     <label>Поле 2 (1 число)</label>
-                    <input type="text" id="drawField2" class="input-field" placeholder="1" readonly>
+                    <input type="text" id="drawField2" class="input-field" placeholder="1">
                 </div>
             </div>
             <div id="validationError" class="validation-error"></div>
@@ -1185,7 +1185,7 @@
             btn.classList.add('active');
             currentMethod = btn.dataset.method;
         });
-    }
+    });
     
     // Генерация чисел
     function generateNumbers() {
@@ -1938,7 +1938,7 @@
             const availableNumbers = Array.from({ length: 20 }, (_, i) => i + 1);
             
             for (let i = 0; i < 8; i++) {
-                // Создаем распределение вероятностей
+                // Созраем распределение вероятностей
                 let rand = Math.random();
                 let cumulative = 0;
                 let selectedIndex = 0;
@@ -2299,7 +2299,7 @@
                 datasets: [{
                     label: 'Вероятность выпадения',
                     data: predictions.field2,
-                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    backgroundColor: 'rgza(75, 192, 192, 0.7)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
                 }]
