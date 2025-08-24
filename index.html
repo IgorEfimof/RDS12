@@ -551,6 +551,18 @@
             width: 100%;
             height: 250px;
         }
+        .debug-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+        .dark-mode .debug-info {
+            background: #333;
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -646,6 +658,9 @@
             </div>
             
             <div class="tab-content" id="predictionsTab">
+                <div class="debug-info" id="debugInfo">
+                    Информация об отладке будет отображаться здесь
+                </div>
                 <div class="prediction-charts">
                     <div class="prediction-chart-container">
                         <canvas id="field1PredictionChart"></canvas>
@@ -974,7 +989,7 @@
         return { drawId, nums1, num2 };
     }
 
-    // --- Добавление в историю ---
+    // --- Добавление в история ---
     document.getElementById('addHistoryBtn').onclick = () => {
         const validData = validateDrawInput();
         if(!validData) return;
@@ -1561,6 +1576,7 @@
     const modelAccuracy = document.getElementById('modelAccuracy');
     const modelDataSize = document.getElementById('modelDataSize');
     const trainModelBtn = document.getElementById('trainModelBtn');
+    const debugInfo = document.getElementById('debugInfo');
     
     // Инициализация модели
     async function initModel() {
@@ -1584,8 +1600,10 @@
                     
                     modelAccuracy.textContent = modelInfo.accuracy ? `${modelInfo.accuracy}%` : '0%';
                     trainingMessage.textContent = 'Модель загружена';
+                    debugInfo.textContent = 'Модель успешно загружена из IndexedDB';
                 } catch (e) {
                     console.error('Ошибка загрузки модели:', e);
+                    debugInfo.textContent = 'Ошибка загрузки модели: ' + e.message;
                     // Создаем новую модель при ошибке загрузки
                     createModel();
                     localStorage.removeItem('lstmModelInfo');
@@ -1595,6 +1613,7 @@
             }
         } catch (e) {
             console.log('Модель не найдена, создаем новую', e);
+            debugInfo.textContent = 'Модель не найдена, создаем новую: ' + e.message;
         }
         
         // Создаем новую модель
@@ -1606,28 +1625,28 @@
     function createModel() {
         lstmModel = tf.sequential();
         
-        // Улучшенная архитектура
+        // Упрощенная архитектура для мобильных устройств
         lstmModel.add(tf.layers.lstm({
-            units: 192,
+            units: 64,
             inputShape: [10, 24],
             returnSequences: true,
             kernelRegularizer: tf.regularizers.l2({l2: 0.01})
         }));
         
         lstmModel.add(tf.layers.batchNormalization());
-        lstmModel.add(tf.layers.dropout({rate: 0.4}));
+        lstmModel.add(tf.layers.dropout({rate: 0.3}));
         
         lstmModel.add(tf.layers.lstm({
-            units: 128,
+            units: 32,
             returnSequences: false,
             kernelRegularizer: tf.regularizers.l2({l2: 0.01})
         }));
         
         lstmModel.add(tf.layers.batchNormalization());
-        lstmModel.add(tf.layers.dropout({rate: 0.4}));
+        lstmModel.add(tf.layers.dropout({rate: 0.3}));
         
         lstmModel.add(tf.layers.dense({
-            units: 96,
+            units: 24,
             activation: 'relu',
             kernelInitializer: 'heNormal'
         }));
@@ -1640,7 +1659,7 @@
         
         // Компиляция модели
         lstmModel.compile({
-            optimizer: tf.train.adam(0.0005),
+            optimizer: tf.train.adam(0.001),
             loss: 'binaryCrossentropy',
             metrics: ['accuracy']
         });
@@ -1725,13 +1744,13 @@
         try {
             // Обучение модели
             const historyInfo = await lstmModel.fit(data.X, data.y, {
-                epochs: 100,
-                batchSize: 16,
+                epochs: 50, // Уменьшено для мобильных устройств
+                batchSize: 8, // Уменьшено для мобильных устройств
                 validationSplit: 0.2,
                 callbacks: {
                     onEpochEnd: async (epoch, logs) => {
-                        trainingMessage.textContent = `Эпоха ${epoch + 1}/100...`;
-                        trainingProgress.style.width = `${((epoch + 1) / 100) * 100}%`;
+                        trainingMessage.textContent = `Эпоха ${epoch + 1}/50...`;
+                        trainingProgress.style.width = `${((epoch + 1) / 50) * 100}%`;
                         modelAccuracy.textContent = `${Math.round((logs.acc || logs.val_acc) * 100)}%`;
                         await tf.nextFrame(); // Даем браузеру обновиться
                         
@@ -1757,9 +1776,11 @@
             
             modelAccuracy.textContent = `${accuracy}%`;
             trainingMessage.textContent = 'Обучение завершено!';
+            debugInfo.textContent = 'Модель успешно обучена и сохранена';
         } catch (e) {
             console.error('Ошибка обучения:', e);
             trainingMessage.textContent = 'Ошибка обучения: ' + e.message;
+            debugInfo.textContent = 'Ошибка обучения: ' + e.message;
         } finally {
             isTraining = false;
             trainModelBtn.disabled = false;
@@ -1837,14 +1858,17 @@
             localStorage.setItem('lstmModelInfo', JSON.stringify(modelInfo));
             
             console.log('Модель обновлена онлайн');
+            debugInfo.textContent = 'Модель обновлена онлайн';
         } catch (e) {
             console.error('Ошибка онлайн-обучения:', e);
+            debugInfo.textContent = 'Ошибка онлайн-обучения: ' + e.message;
         }
     }
     
     // Генерация чисел с помощью LSTM
     async function generateLSTMNumbers() {
         if (!lstmModel || history.length < 10) {
+            debugInfo.textContent = 'Модель не готова или недостаточно данных для генерации LSTM';
             return generateColdNumbers(); // Fallback
         }
         
@@ -1867,16 +1891,17 @@
                 sequence.push(vector);
             }
             
-            // Преобразуем в тензор
-            const input = tf.tensor3d([sequence]);
-            
-            // Получаем предсказание
-            const prediction = lstmModel.predict(input);
-            const values = await prediction.data();
-            
-            // Освобождаем память
-            prediction.dispose();
-            input.dispose();
+            // Используем tf.tidy для автоматического управления памятью
+            const values = tf.tidy(() => {
+                // Преобразуем в тензор
+                const input = tf.tensor3d([sequence]);
+                
+                // Получаем предсказание
+                const prediction = lstmModel.predict(input);
+                
+                // Синхронно получаем данные
+                return Array.from(prediction.dataSync());
+            });
             
             // 1. Нормализуем вероятности для поля 1
             const field1Probs = values.slice(0, 20);
@@ -1941,9 +1966,11 @@
                 }
             }
             
+            debugInfo.textContent = 'LSTM генерация выполнена успешно';
             return { nums1, num2: field2Num };
         } catch (e) {
             console.error('Ошибка генерации LSTM:', e);
+            debugInfo.textContent = 'Ошибка генерации LSTM: ' + e.message;
             return generateColdNumbers();
         }
     }
@@ -2081,6 +2108,7 @@
     // Функция для получения предсказаний LSTM
     async function getLSTMPredictions() {
         if (!lstmModel || history.length < 10) {
+            debugInfo.textContent = 'Модель не готова или недостаточно данных для прогноза';
             return null;
         }
         
@@ -2103,27 +2131,30 @@
                 sequence.push(vector);
             }
             
-            // Преобразуем в тензор
-            const input = tf.tensor3d([sequence]);
-            
-            // Получаем предсказание
-            const prediction = lstmModel.predict(input);
-            const values = await prediction.data();
-            
-            // Освобождаем память
-            prediction.dispose();
-            input.dispose();
+            // Используем tf.tidy для автоматического управления памятью
+            const values = tf.tidy(() => {
+                // Преобразуем в тензор
+                const input = tf.tensor3d([sequence]);
+                
+                // Получаем предсказание
+                const prediction = lstmModel.predict(input);
+                
+                // Синхронно получаем данные
+                return Array.from(prediction.dataSync());
+            });
             
             // Разделяем предсказания для полей 1 и 2
             const field1Predictions = values.slice(0, 20);
             const field2Predictions = values.slice(20, 24);
             
+            debugInfo.textContent = 'Прогнозы LSTM успешно получены';
             return {
                 field1: field1Predictions,
                 field2: field2Predictions
             };
         } catch (e) {
             console.error('Ошибка получения предсказаний LSTM:', e);
+            debugInfo.textContent = 'Ошибка получения предсказаний LSTM: ' + e.message;
             return null;
         }
     }
