@@ -2246,16 +2246,29 @@
         
         if (!predictions) return;
         
-        predictions.forEach((value, index) => {
+        // Создаем массив объектов для сортировки
+        const predictionData = predictions.map((value, index) => ({
+            number: index + 1,
+            probability: value
+        }));
+        
+        // Сортируем по вероятности (по убыванию)
+        predictionData.sort((a, b) => b.probability - a.probability);
+        
+        predictionData.forEach(item => {
             const numberDiv = document.createElement('div');
             numberDiv.className = 'prediction-number';
-            numberDiv.textContent = index + 1;
+            numberDiv.textContent = item.number;
+            numberDiv.style.backgroundColor = `rgba(0, 188, 212, ${0.3 + item.probability * 0.7})`; // Цвет зависит от вероятности
             
             const valueDiv = document.createElement('div');
             valueDiv.className = 'prediction-value';
-            valueDiv.textContent = (value * 100).toFixed(1) + '%';
+            valueDiv.textContent = (item.probability * 100).toFixed(1) + '%';
             
             const wrapper = document.createElement('div');
+            wrapper.style.display = 'inline-block';
+            wrapper.style.margin = '5px';
+            wrapper.style.textAlign = 'center';
             wrapper.appendChild(numberDiv);
             wrapper.appendChild(valueDiv);
             
@@ -2356,7 +2369,7 @@
                 datasets: [{
                     label: 'Вероятность выпадения',
                     data: predictions.field2,
-                    backgroundColor: 'rgza(75, 192, 192, 0.7)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)', // Исправлено: было 'rgza'
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
                 }]
