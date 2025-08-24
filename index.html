@@ -3,10 +3,6 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon181.png">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RDS12">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Улучшенный Рапидо Старт с LSTM</title>
     <!-- Загрузка TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
@@ -550,6 +546,7 @@
         .prediction-chart-container {
             width: 100%;
             height: 250px;
+            position: relative;
         }
         .debug-info {
             font-size: 12px;
@@ -562,6 +559,29 @@
         .dark-mode .debug-info {
             background: #333;
             color: #ccc;
+        }
+        .prediction-numbers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        .prediction-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background: var(--lstm-color);
+            color: white;
+        }
+        .prediction-value {
+            font-size: 10px;
+            margin-top: 2px;
+            text-align: center;
         }
     </style>
 </head>
@@ -665,9 +685,12 @@
                     <div class="prediction-chart-container">
                         <canvas id="field1PredictionChart"></canvas>
                     </div>
+                    <div class="prediction-numbers" id="field1PredictionNumbers"></div>
+                    
                     <div class="prediction-chart-container">
                         <canvas id="field2PredictionChart"></canvas>
                     </div>
+                    <div class="prediction-numbers" id="field2PredictionNumbers"></div>
                 </div>
                 <div class="info-box">
                     Прогноз вероятности выпадения чисел в следующем тираже на основе LSTM модели.
@@ -1162,7 +1185,7 @@
             btn.classList.add('active');
             currentMethod = btn.dataset.method;
         });
-    });
+    }
     
     // Генерация чисел
     function generateNumbers() {
@@ -1443,7 +1466,7 @@
         const groups = [
             { start: 1, end: 5 },   // Группа 1-5
             { start: 6, end: 10 },  // Группа 6-10
-            { start: 11, end: 15 }, // Группа 11-15
+            { start: 11, end: 15 }, // Гroupпа 11-15
             { start: 16, end: 20 }  // Группа 16-20
         ];
 
@@ -1680,7 +1703,7 @@
         for (let i = sequenceLength; i < history.length; i++) {
             const sequence = [];
             
-            // Формируем последовательность из 10 предыдущих тиражей
+            // Формируем последовательность из 10 предыдуных тиражей
             for (let j = i - sequenceLength; j < i; j++) {
                 const draw = history[j];
                 const vector = Array(24).fill(0);
@@ -2159,6 +2182,30 @@
         }
     }
     
+    // Отображение предсказаний в виде чисел
+    function renderPredictionNumbers(predictions, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        
+        if (!predictions) return;
+        
+        predictions.forEach((value, index) => {
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'prediction-number';
+            numberDiv.textContent = index + 1;
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'prediction-value';
+            valueDiv.textContent = (value * 100).toFixed(1) + '%';
+            
+            const wrapper = document.createElement('div');
+            wrapper.appendChild(numberDiv);
+            wrapper.appendChild(valueDiv);
+            
+            container.appendChild(wrapper);
+        });
+    }
+    
     // Обновление графиков предсказаний
     async function updatePredictionCharts() {
         const field1Ctx = document.getElementById('field1PredictionChart').getContext('2d');
@@ -2181,8 +2228,16 @@
             field2Ctx.fillStyle = 'gray';
             field2Ctx.textAlign = 'center';
             field2Ctx.fillText('Недостаточно данных для предсказания', field2Ctx.canvas.width / 2, field2Ctx.canvas.height / 2);
+            
+            // Очищаем числовые представления
+            document.getElementById('field1PredictionNumbers').innerHTML = '';
+            document.getElementById('field2PredictionNumbers').innerHTML = '';
             return;
         }
+        
+        // Отображаем числовые представления
+        renderPredictionNumbers(predictions.field1, 'field1PredictionNumbers');
+        renderPredictionNumbers(predictions.field2, 'field2PredictionNumbers');
         
         // Уничтожаем старые графики, если они существуют
         if (window.field1PredictionChart) {
