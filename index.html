@@ -1983,9 +1983,17 @@
                 return Array.from(prediction.dataSync());
             });
             
+            // Проверяем, есть ли NaN в предсказаниях
+            if (values.some(v => isNaN(v))) {
+                debugInfo.textContent = 'LSTM модель вернула NaN значения';
+                return generateColdNumbers();
+            }
+            
             // 1. Нормализуем вероятности для поля 1
             const field1Probs = values.slice(0, 20);
             const sum1 = field1Probs.reduce((a, b) => a + b, 0);
+            
+            // Если сумма вероятностей равна 0, используем равномерное распределение
             const normalizedProbs1 = sum1 > 0 ? 
                 field1Probs.map(p => p / sum1) : 
                 Array(20).fill(1/20);
@@ -2030,6 +2038,8 @@
             // 3. Выбираем число для поля 2
             const field2Probs = values.slice(20, 24);
             const sum2 = field2Probs.reduce((a, b) => a + b, 0);
+            
+            // Если сумма вероятностей равна 0, используем равномерное распределение
             const normalizedProbs2 = sum2 > 0 ? 
                 field2Probs.map(p => p / sum2) : 
                 Array(4).fill(0.25);
@@ -2222,6 +2232,12 @@
                 // Синхронно получаем данные
                 return Array.from(prediction.dataSync());
             });
+            
+            // Проверяем, есть ли NaN в предсказаниях
+            if (values.some(v => isNaN(v))) {
+                debugInfo.textContent = 'LSTM модель вернула NaN значения';
+                return null;
+            }
             
             // Разделяем предсказания для полей 1 и 2
             const field1Predictions = values.slice(0, 20);
