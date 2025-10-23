@@ -587,6 +587,67 @@
             margin-top: 2px;
             text-align: center;
         }
+        
+        /* Инструкция */
+        .instruction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .instruction-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            width: auto;
+            padding: 5px;
+            margin: 0;
+        }
+
+        .instruction-content {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .instruction-step {
+            margin-bottom: 20px;
+        }
+
+        .instruction-step h3 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .instruction-step ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .instruction-step li {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .instruction-step p {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .instruction-tip {
+            background: rgba(255, 193, 7, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .dark-mode .instruction-tip {
+            background: rgba(255, 193, 7, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -596,6 +657,80 @@
         <div class="card">
             <h1>Улучшенный Рапидо Старт с LSTM</h1>
             <p class="subtitle">Гибридный анализ с нейросетевым прогнозированием</p>
+        </div>
+        
+        <!-- Инструкция -->
+        <div class="card">
+            <div class="instruction-header">
+                <h2>📋 Инструкция</h2>
+                <button id="toggleInstruction" class="instruction-toggle">▼</button>
+            </div>
+            <div id="instructionContent" class="instruction-content" style="display: none;">
+                <div class="instruction-step">
+                    <h3>1. Сгенерировать числа</h3>
+                    <p>Выберите метод генерации и нажмите "Сгенерировать":</p>
+                    <ul>
+                        <li><strong>Холодные</strong> - числа, которые редко выпадали</li>
+                        <li><strong>Огнева</strong> - числа вокруг среднего значения</li>
+                        <li><strong>Карнауха</strong> - комбинация холодных, средних и горячих чисел</li>
+                        <li><strong>Равномерный</strong> - равномерное распределение по диапазонам</li>
+                        <li><strong>LSTM</strong> - прогноз с помощью нейросети</li>
+                        <li><strong>Гибридный</strong> - комбинация холодных чисел и LSTM</li>
+                    </ul>
+                </div>
+                
+                <div class="instruction-step">
+                    <h3>2. Добавить результат розыгрыша</h3>
+                    <p>После реального розыгрыша введите его результат:</p>
+                    <ul>
+                        <li>Номер тиража заполняется автоматически</li>
+                        <li>В поле 1 введите 8 чисел через запятую (от 1 до 20)</li>
+                        <li>В поле 2 введите одно число (от 1 до 4)</li>
+                        <li>Нажмите "Добавить результат"</li>
+                    </ul>
+                    <p>Программа автоматически проверит вашу ставку и рассчитает выигрыш.</p>
+                </div>
+                
+                <div class="instruction-step">
+                    <h3>3. Анализ статистики</h3>
+                    <p>Используйте вкладки аналитики для изучения данных:</p>
+                    <ul>
+                        <li><strong>Эффективность</strong> - ROI и процент выигрышей по методам</li>
+                        <li><strong>Тепловая карта</strong> - совместная встречаемость чисел</li>
+                        <li><strong>Прогнозы</strong> - предсказания LSTM модели</li>
+                    </ul>
+                </div>
+                
+                <div class="instruction-step">
+                    <h3>4. Обучение модели</h3>
+                    <p>Для работы LSTM модели нужно:</p>
+                    <ul>
+                        <li>Минимум 15 записей в истории</li>
+                        <li>Нажмите "Обучить модель" для обучения</li>
+                        <li>Модель автоматически обучается при добавлении новых данных</li>
+                    </ul>
+                </div>
+                
+                <div class="instruction-step">
+                    <h3>Таблица выигрышей Рапидо</h3>
+                    <table class="prize-table">
+                        <tr><th>Совпадения</th><th>Выигрыш</th></tr>
+                        <tr><td>8 + 1</td><td class="jackpot">Суперприз (5 000 000 ₽)</td></tr>
+                        <tr><td>8 + 0</td><td>25 000 ₽</td></tr>
+                        <tr><td>7 + 1</td><td>5 000 ₽</td></tr>
+                        <tr><td>7 + 0</td><td>1 000 ₽</td></tr>
+                        <tr><td>6 + 1</td><td>175 ₽</td></tr>
+                        <tr><td>6 + 0</td><td>150 ₽</td></tr>
+                        <tr><td>5 + 1</td><td>100 ₽</td></tr>
+                        <tr><td>5 + 0</td><td>50 ₽</td></tr>
+                        <tr><td>4 + 1</td><td>25 ₽</td></tr>
+                    </table>
+                </div>
+                
+                <div class="instruction-tip">
+                    <p><strong>💡 Совет:</strong> Для лучших результатов используйте гибридный метод и регулярно обновляйте историю розыгрышей.</p>
+                </div>
+            </div>
         </div>
         
         <div class="card">
@@ -2385,7 +2520,7 @@
                 datasets: [{
                     label: 'Вероятность выпадения',
                     data: predictions.field2,
-                    backgroundColor: 'rgba(75, 192, 192, 0.7)', // Исправлено: было 'rgza'
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
                 }]
@@ -2440,6 +2575,20 @@
                 updatePredictionCharts();
             }
         });
+    });
+    
+    // --- Инструкция ---
+    document.getElementById('toggleInstruction').addEventListener('click', function() {
+        const content = document.getElementById('instructionContent');
+        const toggle = document.getElementById('toggleInstruction');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            toggle.textContent = '▲';
+        } else {
+            content.style.display = 'none';
+            toggle.textContent = '▼';
+        }
     });
     
     // --- Инициализация при загрузке ---
